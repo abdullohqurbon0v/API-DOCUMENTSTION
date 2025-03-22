@@ -7,23 +7,19 @@ import {
 } from "@/components/ui/accordion";
 import React from "react";
 
-// Интерфейс для описания поля
 interface Field {
   name: string;
   type: string;
   comment: string;
 }
-
-// Интерфейс для описания эндпоинта
 interface Endpoint {
   endpoint: string;
-  queryParams?: Field[]; // Добавлено для query параметров
+  queryParams?: Field[];
   requestBody?: Field[];
   dbSchema?: Field[];
   response: Field[];
 }
 
-// Данные для POST методов
 const POST_ENDPOINTS: Endpoint[] = [
   {
     endpoint: "/user/login",
@@ -49,6 +45,11 @@ const POST_ENDPOINTS: Endpoint[] = [
         type: "string",
         comment: "Verified phone number",
       },
+      {
+        name: "createdAt",
+        type: "Date",
+        comment: "Account creation timestamp",
+      },
     ],
     response: [
       { name: "success", type: "boolean", comment: "Operation success status" },
@@ -63,9 +64,13 @@ const POST_ENDPOINTS: Endpoint[] = [
       {
         name: "sms_code",
         type: "number",
-        comment: "6-digit verification code",
+        comment: "6-digit verification code (required)",
       },
-      { name: "phone_number", type: "string", comment: "Phone to verify" },
+      {
+        name: "phone_number",
+        type: "string",
+        comment: "Phone to verify (required)",
+      },
     ],
     dbSchema: [
       { name: "id", type: "number", comment: "Verification record ID" },
@@ -76,6 +81,11 @@ const POST_ENDPOINTS: Endpoint[] = [
       },
       { name: "phone_number", type: "string", comment: "Associated phone" },
       { name: "expireAt", type: "Date", comment: "Code expiration time" },
+      {
+        name: "attempts",
+        type: "number",
+        comment: "Number of verification attempts",
+      },
     ],
     response: [
       {
@@ -91,22 +101,90 @@ const POST_ENDPOINTS: Endpoint[] = [
       { name: "message", type: "string", comment: "Response message" },
     ],
   },
+  {
+    endpoint: "/product/create",
+    requestBody: [
+      {
+        name: "product_name",
+        type: "string",
+        comment: "Product title (required)",
+      },
+      {
+        name: "product_images",
+        type: "string[]",
+        comment: "Array of image URLs (required)",
+      },
+      {
+        name: "price",
+        type: "number",
+        comment: "Product price in USD (required)",
+      },
+      {
+        name: "category",
+        type: "string",
+        comment: "Product category (required)",
+      },
+      {
+        name: "description",
+        type: "string",
+        comment: "Product description (optional)",
+      },
+      { name: "type", type: "string", comment: "Product type (optional)" },
+      {
+        name: "stock",
+        type: "number",
+        comment: "Available quantity (required)",
+      },
+    ],
+    dbSchema: [
+      { name: "id", type: "number", comment: "Unique identifier" },
+      { name: "product_name", type: "string", comment: "Stored product name" },
+      {
+        name: "product_images",
+        type: "string[]",
+        comment: "Array of stored image URLs",
+      },
+      { name: "price", type: "number", comment: "Stored price" },
+      { name: "category", type: "string", comment: "Stored category" },
+      { name: "description", type: "string", comment: "Stored description" },
+      { name: "type", type: "string", comment: "Stored product type" },
+      { name: "stock", type: "number", comment: "Current stock quantity" },
+      { name: "createdAt", type: "Date", comment: "Creation timestamp" },
+    ],
+    response: [
+      { name: "success", type: "boolean", comment: "Operation success status" },
+      {
+        name: "productId",
+        type: "number",
+        comment: "Created product identifier",
+      },
+      { name: "message", type: "string", comment: "Response message" },
+    ],
+  },
 ];
 
-// Данные для GET методов
 const GET_ENDPOINTS: Endpoint[] = [
   {
     endpoint: "/product/",
+    queryParams: [
+      { name: "id", type: "number", comment: "Product ID (optional)" },
+      {
+        name: "category",
+        type: "string",
+        comment: "Filter by category (optional)",
+      },
+    ],
     response: [
       { name: "id", type: "number", comment: "Product identifier" },
       { name: "name", type: "string", comment: "Product name" },
       { name: "price", type: "number", comment: "Product price in USD" },
       { name: "stock", type: "number", comment: "Available quantity" },
+      { name: "category", type: "string", comment: "Product category" },
+      { name: "images", type: "string[]", comment: "Array of image URLs" },
     ],
   },
 ];
 
-// Данные для PUT методов
 const PUT_ENDPOINTS: Endpoint[] = [
   {
     endpoint: "/user/update",
@@ -121,12 +199,18 @@ const PUT_ENDPOINTS: Endpoint[] = [
         type: "string",
         comment: "New phone number (optional)",
       },
+      {
+        name: "email",
+        type: "string",
+        comment: "New email address (optional)",
+      },
     ],
     dbSchema: [
       { name: "id", type: "number", comment: "Unique identifier" },
       { name: "name", type: "string", comment: "Updated first name" },
       { name: "lastname", type: "string", comment: "Updated last name" },
       { name: "phone_number", type: "string", comment: "Updated phone number" },
+      { name: "email", type: "string", comment: "Updated email" },
       { name: "updatedAt", type: "Date", comment: "Last update timestamp" },
     ],
     response: [
@@ -137,7 +221,6 @@ const PUT_ENDPOINTS: Endpoint[] = [
   },
 ];
 
-// Данные для DELETE методов
 const DELETE_ENDPOINTS: Endpoint[] = [
   {
     endpoint: "/user/delete",
@@ -147,6 +230,11 @@ const DELETE_ENDPOINTS: Endpoint[] = [
     dbSchema: [
       { name: "id", type: "number", comment: "Unique identifier" },
       { name: "deletedAt", type: "Date", comment: "Deletion timestamp" },
+      {
+        name: "deletedBy",
+        type: "number",
+        comment: "ID of user who performed deletion (optional)",
+      },
     ],
     response: [
       { name: "success", type: "boolean", comment: "Deletion success status" },
@@ -156,6 +244,7 @@ const DELETE_ENDPOINTS: Endpoint[] = [
   },
 ];
 
+// Компонент Page остается без изменений
 const Page: React.FC = () => {
   return (
     <div className="max-w-[1200px] mx-auto mt-32 px-4">
@@ -248,6 +337,26 @@ const Page: React.FC = () => {
             </AccordionTrigger>
             <AccordionContent className="px-4 py-6 bg-white">
               <div className="space-y-6">
+                {item.queryParams && (
+                  <div>
+                    <p className="mb-2 text-lg font-semibold text-gray-700">
+                      Query Parameters
+                    </p>
+                    <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <ul className="space-y-2">
+                        {item.queryParams.map((field, idx) => (
+                          <li key={idx}>
+                            <span className="text-blue-600">{field.name}</span>:{" "}
+                            <span className="text-green-600">{field.type}</span>{" "}
+                            <span className="text-gray-500">
+                              // {field.comment}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
                 <div>
                   <p className="mb-2 text-lg font-semibold text-gray-700">
                     Response
